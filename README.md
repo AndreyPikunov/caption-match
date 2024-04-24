@@ -27,6 +27,17 @@ streamlit run src/app.py
 
 ### Notes 📝
 
-- Results often include irrelevant images. It would be beneficial to display a final **score** for each result for better filtering.
-- The **weight** assigned to the caption parameter is significantly less impactful compared to brightness and recency. Adjusting the recency weight to around 0.05 can effectively negate the influence of the caption.
-- Currently, data is loaded and processed at each startup. To improve efficiency, consider storing embeddings in a **persistent vector database** that can be quickly accessed upon application restarts.
+- Results sometimes include irrelevant images. It would be beneficial to display a final **score** for each result for better filtering.
+
+- It is easy to add more parameters, like dominant color, saturation. However, they may negatively interfere with caption during the querying (see next).
+
+- The **weight** assigned to the caption parameter is significantly less impactful compared to brightness and recency. Adjusting the recency weight to around 0.05 can effectively negate the influence of the caption. This behavior may be due to two factors:
+    - The vector space for image embeddings is substantially larger than that for brightness and recency, and subjected to curse of dimensionality.
+    - Brightness (or similarly, saturation or main color) might also be described in the caption, such as in phrases like "dark winter forest" or "shiny coastline".
+
+- Currently, data is loaded and processed at each startup. To improve efficiency, embeddings can be stored in a **persistent vector database** that can be quickly accessed upon application restarts.
+
+### ToDo 📌
+- Refactoring
+- Dockerfile
+- Redis as a vector DB
