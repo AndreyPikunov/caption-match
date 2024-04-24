@@ -18,15 +18,16 @@ def display_images(names, dataset, name_to_index):
         item = dataset[index]
         image = item["image_raw"]
         brightness = item["brightness"]
-        col.image(
-            image, caption=f"Brightness: {int(brightness)}", use_column_width=True
-        )
+        creation_time = item["creation_time"]
+        caption = f"Brightness: {int(brightness)}\nTime: {creation_time}"
+        col.image(image, caption=caption, use_column_width=True)
 
 
 @st.cache_resource
 def load_model_and_data():
     model, preprocess = clip.load(MODEL_NAME)
     dataset = load_dataset(Path(PHOTO_FOLDER), preprocess)
+    print("dataset len:", len(dataset))
     return model, dataset
 
 
@@ -52,6 +53,7 @@ brightness = st.number_input(
     "Brightness", min_value=0, max_value=MAX_BRIGHTNESS, value=MAX_BRIGHTNESS // 2
 )
 features_weight = st.slider("Features Weight", min_value=-1.0, max_value=1.0, value=0.0)
+recency_weight = st.slider("Recency", min_value=-1.0, max_value=1.0, value=0.0)
 brightness_weight = st.slider(
     "Brightness Weight", min_value=-1.0, max_value=1.0, value=0.0
 )
@@ -64,6 +66,7 @@ if True:  # st.button("Run"):
         brightness=brightness,
         features_weight=features_weight,
         brightness_weight=brightness_weight,
+        recency_weight=recency_weight
     )
     names = [entry.stored_object["name"] for entry in result.entries]
     display_images(names, dataset=dataset, name_to_index=name_to_index)
