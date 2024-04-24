@@ -1,0 +1,9 @@
+services:
+  app:
+    image: caption-match-app
+    ports:
+      - "8501:8501"
+    volumes:
+      - $PWD/data:/app/data
+    environment:
+      - DYNACONF_PHOTO_FOLDER=data/photos

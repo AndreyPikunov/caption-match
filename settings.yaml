@@ -1,0 +1,7 @@
+model_name: "ViT-B/32"
+embedding_size: 512
+photo_folder: "data/photos"
+max_brightness: 256
+image_size: 512
+query_limit: 4
+days_per_year: 365

@@ -1,0 +1,34 @@
+# Ignore virtual environments
+.venv*
+
+# Ignore Python cache files
+__pycache__
+
+# Ignore Jupyter notebook checkpoints
+.ipynb_checkpoints
+
+# Ignore data directory
+data/
+
+# Ignore all files in the .git directory
+.git
+
+# Ignore other unnecessary files
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg

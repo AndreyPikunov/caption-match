@@ -17,12 +17,13 @@ Popular messengers like Telegram and WhatsApp lack the ability to search for ima
 
 ### Setup and Run 🚀
 
-1. Set the `PHOTO_FOLDER` in [constants.py](./src/constants.py) to the path where your photos are stored. Supported file extensions are `.png` and `.jpg`.
-3. Install dependencies and run the application:
+1. Put your images (`.png` and `.jpg`) in [`/data`](./data/) and update environmenta variable `DYNACONF_PHOTO_FOLDER` in [docker-compose.yaml](./docker-compose.yaml) if needed. Be sure that your images have exif info!
+1. Build docker image and run docker compose:
 
 ```shell
-pip install -r requirements.txt
-streamlit run src/app.py
+docker build -t caption-match-app . 
+docker compose up
+# go to localhost:8501
 ```
 
 ### Notes 📝
@@ -38,6 +39,6 @@ streamlit run src/app.py
 - Currently, data is loaded and processed at each startup. To improve efficiency, embeddings can be stored in a **persistent vector database** that can be quickly accessed upon application restarts.
 
 ### ToDo 📌
-- Refactoring
-- Dockerfile
-- Redis as a vector DB
+- [x] Dockerfile
+- [ ] Refactoring
+- [ ] Redis as a vector DB

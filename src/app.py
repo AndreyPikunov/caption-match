@@ -9,7 +9,8 @@ from utils import (
     create_superlinked_objects,
     populate_source,
 )
-from constants import MAX_BRIGHTNESS, PHOTO_FOLDER, MODEL_NAME
+
+from config import settings
 
 
 def display_images(names, dataset, name_to_index):
@@ -26,40 +27,48 @@ def display_images(names, dataset, name_to_index):
 
 @st.cache_resource
 def load_model_and_data():
-    model, preprocess = clip.load(MODEL_NAME)
-    dataset = load_dataset(Path(PHOTO_FOLDER), preprocess)
+    model, preprocess = clip.load(settings.MODEL_NAME, download_root="./clip")
+    dataset = load_dataset(Path(settings.PHOTO_FOLDER), preprocess)
     print("dataset len:", len(dataset))
     return model, dataset
 
 
-model, dataset = load_model_and_data()
-name_to_index = {x["name"]: i for i, x in enumerate(dataset)}
+def main():
 
-if "source" not in st.session_state or "executor" not in st.session_state:
-    source, executor, photo_query = create_superlinked_objects()
-    sl_app = executor.run()
-    populate_source(source, dataset=dataset, model=model)
-    st.session_state["source"] = source
-    st.session_state["executor"] = executor
-    st.session_state["photo_query"] = photo_query
-    st.session_state["sl_app"] = sl_app
-else:
-    source = st.session_state["source"]
-    executor = st.session_state["executor"]
-    photo_query = st.session_state["photo_query"]
-    sl_app = st.session_state["sl_app"]
+    model, dataset = load_model_and_data()
+    name_to_index = {x["name"]: i for i, x in enumerate(dataset)}
 
-caption = st.text_input("Caption", "Enter a caption")
-brightness = st.number_input(
-    "Target brightness", min_value=0, max_value=MAX_BRIGHTNESS, value=MAX_BRIGHTNESS
-)
-features_weight = st.slider("Features Weight", min_value=-1.0, max_value=1.0, value=0.0)
-recency_weight = st.slider("Recency Weight", min_value=-1.0, max_value=1.0, value=0.0)
-brightness_weight = st.slider(
-    "Brightness Weight", min_value=-1.0, max_value=1.0, value=0.0
-)
+    if "source" not in st.session_state or "executor" not in st.session_state:
+        source, executor, photo_query = create_superlinked_objects()
+        sl_app = executor.run()
+        populate_source(source, dataset=dataset, model=model)
+        st.session_state["source"] = source
+        st.session_state["executor"] = executor
+        st.session_state["photo_query"] = photo_query
+        st.session_state["sl_app"] = sl_app
+    else:
+        source = st.session_state["source"]
+        executor = st.session_state["executor"]
+        photo_query = st.session_state["photo_query"]
+        sl_app = st.session_state["sl_app"]
 
-if True:  # st.button("Run"):
+    caption = st.text_input("Caption", "Enter a caption")
+    brightness = st.number_input(
+        "Target brightness",
+        min_value=0,
+        max_value=settings.MAX_BRIGHTNESS,
+        value=settings.MAX_BRIGHTNESS,
+    )
+    features_weight = st.slider(
+        "Features Weight", min_value=-1.0, max_value=1.0, value=0.0
+    )
+    recency_weight = st.slider(
+        "Recency Weight", min_value=-1.0, max_value=1.0, value=0.0
+    )
+    brightness_weight = st.slider(
+        "Brightness Weight", min_value=-1.0, max_value=1.0, value=0.0
+    )
+
     embedding = embed_caption(caption, model)
     result = sl_app.query(
         photo_query,
@@ -71,3 +80,7 @@ if True:  # st.button("Run"):
     )
     names = [entry.stored_object["name"] for entry in result.entries]
     display_images(names, dataset=dataset, name_to_index=name_to_index)
+
+
+if __name__ == "__main__":
+    main()

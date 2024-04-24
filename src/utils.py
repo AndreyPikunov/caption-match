@@ -7,7 +7,6 @@ from tqdm import tqdm
 import torch
 import clip
 
-
 from superlinked.framework.common.schema.id_schema_object import IdField
 from superlinked.framework.common.schema.schema import schema
 from superlinked.framework.common.schema.schema_object import Array, Float, Timestamp
@@ -23,13 +22,7 @@ from superlinked.framework.common.dag.period_time import PeriodTime
 from superlinked.framework.dsl.source.in_memory_source import InMemorySource
 from superlinked.framework.dsl.query.query import Query
 
-from constants import (
-    IMAGE_SIZE,
-    EMBEDDING_SIZE,
-    MAX_BRIGHTNESS,
-    QEURY_LIMIT,
-    DAYS_PER_YEAR,
-)
+from config import settings
 
 
 def get_image_creation_time(image: Image) -> datetime:
@@ -63,7 +56,8 @@ def load_dataset(folder: Path, preprocess) -> list[dict]:
 
     for filename in tqdm(filenames):
         image_raw = Image.open(filename)
-        image_raw.thumbnail((IMAGE_SIZE, IMAGE_SIZE))
+        image_size = settings.IMAGE_SIZE
+        image_raw.thumbnail((image_size, image_size))
         brightness = calculate_brightness(image_raw)
         creation_time = get_image_creation_time(image_raw)
         image = preprocess(image_raw)
@@ -104,19 +98,22 @@ def create_superlinked_objects():
 
     photo = Photo()
 
-    photo_features_space = CustomSpace(vector=photo.features, length=EMBEDDING_SIZE)
+    photo_features_space = CustomSpace(
+        vector=photo.features, length=settings.EMBEDDING_SIZE
+    )
     photo_brightness_space = NumberSpace(
         number=photo.brightness,
         min_value=0,
-        max_value=MAX_BRIGHTNESS,
+        max_value=settings.MAX_BRIGHTNESS,
         mode=Mode.SIMILAR,
     )
 
+    days_per_year = settings.DAYS_PER_YEAR
     photo_recency_space = RecencySpace(
         timestamp=photo.creation_time,
         period_time_list=[
-            PeriodTime(timedelta(days=2 * DAYS_PER_YEAR)),
-            PeriodTime(timedelta(days=5 * DAYS_PER_YEAR)),
+            PeriodTime(timedelta(days=2 * days_per_year)),
+            PeriodTime(timedelta(days=5 * days_per_year)),
         ],
     )
 
@@ -138,7 +135,7 @@ def create_superlinked_objects():
         .find(photo)
         .similar(photo_features_space.vector, Param("features"))
         .similar(photo_brightness_space.number, Param("brightness"))
-        .limit(QEURY_LIMIT)
+        .limit(settings.QUERY_LIMIT)
     )
 
     return source, executor, photo_query
