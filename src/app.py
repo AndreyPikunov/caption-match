@@ -1,6 +1,7 @@
 from pathlib import Path
 import clip
 import streamlit as st
+from datetime import datetime
 
 from utils import (
     load_dataset,
@@ -18,8 +19,8 @@ def display_images(names, dataset, name_to_index):
         item = dataset[index]
         image = item["image_raw"]
         brightness = item["brightness"]
-        creation_time = item["creation_time"]
-        caption = f"Brightness: {int(brightness)}\nTime: {creation_time}"
+        creation_time = datetime.strftime(item["creation_time"], "%Y/%m/%d")
+        caption = f"Brightness: {int(brightness)}; {creation_time}"
         col.image(image, caption=caption, use_column_width=True)
 
 
@@ -50,10 +51,10 @@ else:
 
 caption = st.text_input("Caption", "Enter a caption")
 brightness = st.number_input(
-    "Brightness", min_value=0, max_value=MAX_BRIGHTNESS, value=MAX_BRIGHTNESS // 2
+    "Target brightness", min_value=0, max_value=MAX_BRIGHTNESS, value=MAX_BRIGHTNESS
 )
 features_weight = st.slider("Features Weight", min_value=-1.0, max_value=1.0, value=0.0)
-recency_weight = st.slider("Recency", min_value=-1.0, max_value=1.0, value=0.0)
+recency_weight = st.slider("Recency Weight", min_value=-1.0, max_value=1.0, value=0.0)
 brightness_weight = st.slider(
     "Brightness Weight", min_value=-1.0, max_value=1.0, value=0.0
 )
@@ -66,7 +67,7 @@ if True:  # st.button("Run"):
         brightness=brightness,
         features_weight=features_weight,
         brightness_weight=brightness_weight,
-        recency_weight=recency_weight
+        recency_weight=recency_weight,
     )
     names = [entry.stored_object["name"] for entry in result.entries]
     display_images(names, dataset=dataset, name_to_index=name_to_index)

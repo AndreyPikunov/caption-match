@@ -23,7 +23,13 @@ from superlinked.framework.common.dag.period_time import PeriodTime
 from superlinked.framework.dsl.source.in_memory_source import InMemorySource
 from superlinked.framework.dsl.query.query import Query
 
-from constants import IMAGE_SIZE, EMBEDDING_SIZE, MAX_BRIGHTNESS, QEURY_LIMIT
+from constants import (
+    IMAGE_SIZE,
+    EMBEDDING_SIZE,
+    MAX_BRIGHTNESS,
+    QEURY_LIMIT,
+    DAYS_PER_YEAR,
+)
 
 
 def get_image_creation_time(image: Image) -> datetime:
@@ -106,13 +112,11 @@ def create_superlinked_objects():
         mode=Mode.SIMILAR,
     )
 
-    days_per_year = 365
-
     photo_recency_space = RecencySpace(
         timestamp=photo.creation_time,
         period_time_list=[
-            PeriodTime(timedelta(days=2 * days_per_year)),
-            PeriodTime(timedelta(days=5 * days_per_year)),
+            PeriodTime(timedelta(days=2 * DAYS_PER_YEAR)),
+            PeriodTime(timedelta(days=5 * DAYS_PER_YEAR)),
         ],
     )
 
