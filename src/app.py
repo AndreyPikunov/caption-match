@@ -1,59 +1,66 @@
-from pathlib import Path
-import clip
-import streamlit as st
 from datetime import datetime
 
-from utils import (
-    load_dataset,
-    embed_caption,
-    create_superlinked_objects,
-    populate_source,
-)
+import streamlit as st
+from tqdm import tqdm
 
 from config import settings
 
+from superlinked_client import SLClient, PhotoQueryParams, Result
+from embedder import Embedder
+from photo_loader import PhotoLoader
 
-def display_images(names, similarities, dataset, name_to_index):
-    cols = st.columns(len(names))
-    for col, name, similarity in zip(cols, names, similarities):
-        index = name_to_index[name]
-        item = dataset[index]
-        image = item["image_raw"]
-        brightness = item["brightness"]
-        similarity = round(similarity * 100, 2)
-        creation_time = datetime.strftime(item["creation_time"], "%Y/%m/%d")
-        caption = (
-            f"{creation_time}; brightness: {int(brightness)}; similarity: {similarity} %"
-        )
+
+def display_images(result: Result, photo_loader: PhotoLoader):
+
+    cols = st.columns(len(result.entries))
+
+    for entry, col in zip(result.entries, cols):
+        stored_object = entry.stored_object
+        filename = stored_object["filename"]
+        image = photo_loader.load_image(filename)
+        similarity = round(entry.entity.metadata.similarity * 100, 2)
+        brightness = int(stored_object["brightness"])
+        creation_timestamp = stored_object["creation_timestamp"]
+        creation_datetime = datetime.fromtimestamp(creation_timestamp)
+        creation_time_str = datetime.strftime(creation_datetime, "%Y/%m/%d")
+        caption = f"{creation_time_str}; brightness: {int(brightness)}; similarity: {similarity} %"
         col.image(image, caption=caption, use_column_width=True)
-
-
-@st.cache_resource
-def load_model_and_data():
-    model, preprocess = clip.load(settings.MODEL_NAME, download_root="./clip")
-    dataset = load_dataset(Path(settings.PHOTO_FOLDER), preprocess)
-    print("dataset len:", len(dataset))
-    return model, dataset
 
 
 def main():
 
-    model, dataset = load_model_and_data()
-    name_to_index = {x["name"]: i for i, x in enumerate(dataset)}
+    if "sl_client" not in st.session_state:
+        sl_client = SLClient(embedding_size=settings.embedder.embedding_size)
+        embedder = Embedder(model_name=settings.embedder.model_name)
+        photo_loader = PhotoLoader(
+            path=settings.photo_loader.path, extensions=settings.photo_loader.extensions
+        )
 
-    if "source" not in st.session_state or "executor" not in st.session_state:
-        source, executor, photo_query = create_superlinked_objects()
-        sl_app = executor.run()
-        populate_source(source, dataset=dataset, model=model)
-        st.session_state["source"] = source
-        st.session_state["executor"] = executor
-        st.session_state["photo_query"] = photo_query
-        st.session_state["sl_app"] = sl_app
+        for images, attributes in tqdm(
+            photo_loader.batch(settings.superlinked.put_batch_size)
+        ):
+            embeddings = embedder.embed_images(images)
+            data = []
+            for embedding, attributes in zip(embeddings, attributes):
+                data_item = {
+                    "filename": attributes.filename,
+                    "brightness": attributes.brightness,
+                    "creation_timestamp": datetime.timestamp(
+                        attributes.creation_datetime
+                    ),
+                    "features": embedding,
+                }
+                data.append(data_item)
+            sl_client.source.put(data)
+
+        st.session_state["sl_client"] = sl_client
+        st.session_state["embedder"] = embedder
+        st.session_state["photo_loader"] = photo_loader
+
     else:
-        source = st.session_state["source"]
-        executor = st.session_state["executor"]
-        photo_query = st.session_state["photo_query"]
-        sl_app = st.session_state["sl_app"]
+        sl_client = st.session_state["sl_client"]
+        embedder = st.session_state["embedder"]
+        photo_loader = st.session_state["photo_loader"]
 
     caption = st.text_input("Caption", "Enter a caption")
     brightness = st.number_input(
@@ -72,18 +79,18 @@ def main():
         "Brightness Weight", min_value=-1.0, max_value=1.0, value=0.0
     )
 
-    embedding = embed_caption(caption, model)
-    result = sl_app.query(
-        photo_query,
+    embedding = embedder.embed_captions([caption])[0]
+
+    params = PhotoQueryParams(
         features=embedding,
         brightness=brightness,
         features_weight=features_weight,
         brightness_weight=brightness_weight,
         recency_weight=recency_weight,
     )
-    names = [entry.stored_object["name"] for entry in result.entries]
-    similarities = [entry.entity.metadata.similarity for entry in result.entries]
-    display_images(names, similarities, dataset=dataset, name_to_index=name_to_index)
+
+    result = sl_client.query_full(params)
+    display_images(result, photo_loader)
 
 
 if __name__ == "__main__":

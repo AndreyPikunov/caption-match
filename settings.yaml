@@ -1,7 +1,14 @@
-model_name: "ViT-B/32"
-embedding_size: 512
-photo_folder: "data/photos"
-max_brightness: 256
-image_size: 512
-query_limit: 4
-days_per_year: 365
+max_brightness: 255
+
+photo_loader:
+  path: "data/photos"
+  extensions: ["jpg", "jpeg", "png"]
+
+embedder:
+  model_name: "ViT-B/32"
+  embedding_size: 512
+  download_root: "clip"
+
+superlinked:
+  limit: 4
+  put_batch_size: 16
