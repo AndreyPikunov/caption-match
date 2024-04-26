@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "caption_match"
+version = "0.1"
+description = "A simple application powered by Superlinked to search for images in your library based on caption, recency, and brightness."
+authors = ["Andrey Pikunov <pikunov.andrew@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.11,<=3.12.3"
+clip = { git = "https://github.com/openai/CLIP.git", rev = "a1d071733d7111c9c014f024669f959182114e33" }
+dynaconf = "3.2.5"
+streamlit = "1.33.0"
+superlinked = "3.29.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

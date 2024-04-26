@@ -8,12 +8,15 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+RUN pip install --no-cache-dir poetry
 
-RUN pip install --no-cache-dir -r requirements.txt
+COPY pyproject.toml poetry.lock ./
+
+RUN poetry config virtualenvs.create false \
+    && poetry install --no-interaction --no-ansi
 
 COPY . /app
 
 EXPOSE 8501
 
-CMD ["streamlit", "run", "src/app.py"]
+CMD ["poetry", "run", "streamlit", "run", "scripts/app.py"]

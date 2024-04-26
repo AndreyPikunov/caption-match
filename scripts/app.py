@@ -3,11 +3,11 @@ from datetime import datetime
 import streamlit as st
 from tqdm import tqdm
 
-from config import settings
+from caption_match.config import settings
 
-from superlinked_client import SLClient, PhotoQueryParams, Result
-from embedder import Embedder
-from photo_loader import PhotoLoader
+from caption_match.superlinked_client import SLClient, PhotoQueryParams, Result
+from caption_match.embedder import Embedder
+from caption_match.photo_loader import PhotoLoader
 
 
 def display_images(result: Result, photo_loader: PhotoLoader):

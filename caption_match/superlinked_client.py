@@ -17,7 +17,7 @@ from superlinked.framework.common.dag.period_time import PeriodTime
 from superlinked.framework.dsl.source.in_memory_source import InMemorySource
 from superlinked.framework.dsl.query.query import Query
 
-from config import settings
+from .config import settings
 
 
 class PhotoQueryParams(BaseModel):

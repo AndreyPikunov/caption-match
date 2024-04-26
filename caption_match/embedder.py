@@ -2,7 +2,7 @@ import clip
 import torch
 from PIL.Image import Image
 
-from config import settings
+from .config import settings
 
 
 class Embedder:
