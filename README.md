@@ -28,7 +28,7 @@ docker compose up
 
 ### Notes 📝
 
-- Results sometimes include irrelevant images. It would be beneficial to display a final **score** for each result for better filtering.
+- Results sometimes include irrelevant images, so it would be beneficial to re-rank them.
 
 - It is easy to add more parameters, like dominant color, saturation. However, they may negatively interfere with caption during the querying (see next).
 

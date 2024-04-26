@@ -13,15 +13,18 @@ from utils import (
 from config import settings
 
 
-def display_images(names, dataset, name_to_index):
+def display_images(names, similarities, dataset, name_to_index):
     cols = st.columns(len(names))
-    for col, name in zip(cols, names):
+    for col, name, similarity in zip(cols, names, similarities):
         index = name_to_index[name]
         item = dataset[index]
         image = item["image_raw"]
         brightness = item["brightness"]
+        similarity = round(similarity * 100, 2)
         creation_time = datetime.strftime(item["creation_time"], "%Y/%m/%d")
-        caption = f"Brightness: {int(brightness)}; {creation_time}"
+        caption = (
+            f"{creation_time}; brightness: {int(brightness)}; similarity: {similarity} %"
+        )
         col.image(image, caption=caption, use_column_width=True)
 
 
@@ -79,7 +82,8 @@ def main():
         recency_weight=recency_weight,
     )
     names = [entry.stored_object["name"] for entry in result.entries]
-    display_images(names, dataset=dataset, name_to_index=name_to_index)
+    similarities = [entry.entity.metadata.similarity for entry in result.entries]
+    display_images(names, similarities, dataset=dataset, name_to_index=name_to_index)
 
 
 if __name__ == "__main__":
