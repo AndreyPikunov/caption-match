@@ -40,5 +40,6 @@ docker compose up
 
 ### ToDo 📌
 - [x] Dockerfile
+- [ ] Try different "CLIP" model like [SigLIP](https://huggingface.co/google/siglip-so400m-patch14-384)
 - [ ] Refactoring
 - [ ] Redis as a vector DB
