@@ -1,5 +1,8 @@
 from datetime import datetime
 import os
+
+# from multiprocessing import Pool
+
 from PIL import Image
 from PIL.ExifTags import TAGS
 from pydantic import BaseModel
@@ -12,8 +15,9 @@ class ImageAttributes(BaseModel):
 
 
 class PhotoLoader:
-    def __init__(self, path, extensions=None):
+    def __init__(self, path, image_resize: int = 512, extensions=None):
         self.path = path
+        self.image_resize = image_resize
         self.extensions = extensions
         if self.extensions is None:
             self.extensions = [".jpg", ".jpeg", ".png"]
@@ -49,36 +53,30 @@ class PhotoLoader:
         )
         return mean_brightness
 
-    def __len__(self):
-        return len(self.filenames)
-
-    def __iter__(self):
-        self.__index = 0
-        return self
-
-    def __next__(self) -> tuple[Image.Image, ImageAttributes]:
-        if self.__index >= len(self):
-            raise StopIteration
-        filename = self.filenames[self.__index]
-        image = self.load_image(filename)
-        attributes = ImageAttributes(
-            filename=filename,
-            brightness=self.calculate_brightness(image),
-            creation_datetime=self.get_image_creation_time(image),
-        )
-        self.__index += 1
-        return image, attributes
-
     def batch(self, size: int = 16):
-        images, attributes = [], []
-        for image, attribute in self:
-            images.append(image)
-            attributes.append(attribute)
-            if len(images) == size:
-                yield images, attributes
-                images, attributes = [], []
-        if images:
+        n = len(self.filenames)
+        for i in range(0, n, size):
+            filenames = self.filenames[i : i + size]
+            images = self.load_images(filenames)
+            attributes = []
+            for image, filename in zip(images, filenames):
+                attributes.append(
+                    ImageAttributes(
+                        filename=filename,
+                        brightness=self.calculate_brightness(image),
+                        creation_datetime=self.get_image_creation_time(image),
+                    )
+                )
             yield images, attributes
 
     def load_image(self, filename: str) -> Image.Image:
-        return Image.open(filename)
+        image = Image.open(filename)
+        image.thumbnail((self.image_resize, self.image_resize))
+        return image
+
+    def load_images(self, filenames: list[str]) -> list[Image.Image]:
+        # multiprocessings doesn't work properly with streamlit
+        # with Pool() as pool:
+        #     images = pool.map(self.load_image, filenames)
+        images = [self.load_image(filename) for filename in filenames]
+        return images

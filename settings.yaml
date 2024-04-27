@@ -2,6 +2,7 @@ max_brightness: 255
 
 photo_loader:
   path: "data/photos"
+  image_resize: 512
   extensions: ["jpg", "jpeg", "png"]
 
 embedder:

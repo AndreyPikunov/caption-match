@@ -33,12 +33,12 @@ def main():
         sl_client = SLClient(embedding_size=settings.embedder.embedding_size)
         embedder = Embedder(model_name=settings.embedder.model_name)
         photo_loader = PhotoLoader(
-            path=settings.photo_loader.path, extensions=settings.photo_loader.extensions
+            path=settings.photo_loader.path,
+            image_resize=settings.photo_loader.image_resize,
+            extensions=settings.photo_loader.extensions,
         )
 
-        for images, attributes in tqdm(
-            photo_loader.batch(settings.superlinked.put_batch_size)
-        ):
+        for images, attributes in photo_loader.batch(settings.superlinked.put_batch_size):
             embeddings = embedder.embed_images(images)
             data = []
             for embedding, attributes in zip(embeddings, attributes):
