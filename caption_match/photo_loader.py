@@ -1,5 +1,7 @@
 from datetime import datetime
 import os
+import base64
+from io import BytesIO
 
 # from multiprocessing import Pool
 
@@ -53,6 +55,13 @@ class PhotoLoader:
         )
         return mean_brightness
 
+    @staticmethod
+    def convert_pil_to_base64(image: Image.Image) -> str:
+        buffered = BytesIO()
+        image.save(buffered, format="JPEG")
+        image_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
+        return image_base64
+
     def batch(self, size: int = 16):
         n = len(self.filenames)
         for i in range(0, n, size):
@@ -73,6 +82,11 @@ class PhotoLoader:
         image = Image.open(filename)
         image.thumbnail((self.image_resize, self.image_resize))
         return image
+
+    def load_image_base64(self, filename: str) -> str:
+        image = self.load_image(filename)
+        image_base64 = self.convert_pil_to_base64(image)
+        return image_base64
 
     def load_images(self, filenames: list[str]) -> list[Image.Image]:
         # multiprocessings doesn't work properly with streamlit
