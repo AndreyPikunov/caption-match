@@ -34,7 +34,7 @@ To address this, I've developed a tiny application that offers a straightforward
 
 ### Setup and Run 🚀
 
-1. Put your photos (`.png` and `.jpg`) in [`/data`](./data/) and update environmenta variable `DYNACONF_PHOTO_FOLDER` in [docker-compose.yaml](./docker-compose.yaml) if needed. Be sure that your photos have exif info!
+1. Put your photos (`.png` and `.jpg`) in [`/data`](./data/) and update environmenta variable `DYNACONF_PHOTO_FOLDER` in [docker-compose.yaml](./docker-compose.yaml) if needed. Be sure that your photos have exif info! Also, you can extract exemplary photos.zip.
 1. Build docker image and run docker compose:
 
 ```shell
