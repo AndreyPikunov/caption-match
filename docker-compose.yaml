@@ -7,3 +7,4 @@ services:
       - $PWD/data:/app/data
     environment:
       - DYNACONF_PHOTO_FOLDER=data/photos
+    command: ["poetry", "run", "streamlit", "run", "scripts/app.py"]

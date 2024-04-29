@@ -8,10 +8,15 @@ from sentence_transformers import CrossEncoder
 from caption_match.config import settings
 
 
-class ResponseRow(BaseModel):
+class GPTResponse(BaseModel):
     match: str
     description: str
-    score: float | None = None
+
+
+class RerankRow(BaseModel):
+    match: str
+    description: str
+    score: float
 
 
 def sigmoid(x):
@@ -48,11 +53,10 @@ class Reranker:
         )
         return prompt
 
-    def _parse_response(self, response: dict) -> list[ResponseRow]:
+    def _parse_response(self, response: dict) -> list[GPTResponse]:
         content = response["choices"][0]["message"]["content"]
-        rows = json.loads(content)["response"]
-        result = [ResponseRow(**row) for row in rows]
-        return result
+        rows = [GPTResponse(**x) for x in json.loads(content)["response"]]
+        return rows
 
     def _create_payload_content(
         self, caption: str, images_base64: list[str]
@@ -73,7 +77,7 @@ class Reranker:
 
         return content
 
-    def rerank(self, caption: str, images_base64: list[str]) -> list[ResponseRow]:
+    def rerank(self, caption: str, images_base64: list[str]) -> list[RerankRow]:
 
         content = self._create_payload_content(caption, images_base64)
 
@@ -100,13 +104,16 @@ class Reranker:
 
         response = requests.post(self.url, json=payload, headers=self.__headers)
         response.raise_for_status()
-        rows = self._parse_response(response.json())
+        response_rows = self._parse_response(response.json())
 
-        pairs = [(caption, row.description) for row in rows]
+        pairs = [[caption, x.description] for x in response_rows]
         scores = self.reranker.predict(pairs)
         scores = sigmoid(scores)
 
-        for row, score in zip(rows, scores):
-            row.score = score
+        result = []
 
-        return rows
+        for response_row, score in zip(response_rows, scores):
+            rerank_row = RerankRow(score=score, **response_row.model_dump())
+            result.append(rerank_row)
+
+        return result

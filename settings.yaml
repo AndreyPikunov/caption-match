@@ -13,6 +13,10 @@ embedder:
 superlinked:
   limit: 6
   put_batch_size: 1
+  year_deltas:
+    - 2
+    - 5
+    - 10
 
 reranker:
   openai_url: https://api.openai.com/v1/chat/completions

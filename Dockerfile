@@ -20,5 +20,3 @@ COPY . /app
 RUN poetry install --no-interaction --no-ansi
 
 EXPOSE 8501
-
-CMD ["poetry", "run", "streamlit", "run", "scripts/app.py"]
